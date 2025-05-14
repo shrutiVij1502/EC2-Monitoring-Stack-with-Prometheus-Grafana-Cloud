@@ -1,7 +1,7 @@
 
-# 🔍 EC2 Monitoring POC with Prometheus, Node Exporter & Grafana Cloud
+# EC2 Monitoring POC with Prometheus, Node Exporter & Grafana Cloud
 
-## 📌 Objective
+## Objective
 
 Set up a monitoring system on AWS EC2 instances using:
 
@@ -11,7 +11,7 @@ Set up a monitoring system on AWS EC2 instances using:
 
 ---
 
-## 🧾 Architecture
+## Architecture
 
 ```
 +---------------------+      +---------------------+      +---------------------+
@@ -19,16 +19,17 @@ Set up a monitoring system on AWS EC2 instances using:
 |  Node Exporter      |      |  Node Exporter      |      |  Prometheus         |
 |  Port: 9100         |      |  Port: 9100         |      |  Port: 9090         |
 +---------------------+      +---------------------+      +---------------------+
-                                     \                     /
-                                      \                   /
-                                       +-----------------+
-                                       |  Grafana Cloud  |
-                                       +-----------------+
+                                                          
+Linked to the Grafana cloud                    
+for metrics visualisation        +-----------------+
+on grafana cloud Dashboard       |  Grafana Cloud  |
+                                 +-----------------+
+    
 ```
 
 ---
 
-## 🔧 Step 1: Install Node Exporter on Machine1 & Machine2
+## Step 1: Install Node Exporter on Machine1 & Machine2
 
 SSH into the EC2 machines:
 ```bash
@@ -69,7 +70,7 @@ http://<machine-ip>:9100/metrics
 
 ---
 
-## 🔧 Step 2: Install Prometheus on Machine3
+## Step 2: Install Prometheus on Machine3
 
 SSH into the Prometheus EC2:
 ```bash
@@ -87,7 +88,7 @@ sudo mv consoles/ console_libraries/ /etc/prometheus/
 sudo mv prometheus.yml /etc/prometheus/prometheus.yml
 ```
 
-### ✍️ Update Prometheus Config `/etc/prometheus/prometheus.yml`:
+### Then, Update Prometheus Config `/etc/prometheus/prometheus.yml`:
 
 ```yaml
 global:
@@ -106,6 +107,7 @@ scrape_configs:
         labels:
           instance: 'machine2'
 ```
+Use Private IP, if in same VPC, else we can use the public IP by allowing the Port in the security group 
 
 Create Prometheus systemd service:
 ```bash
@@ -143,7 +145,7 @@ http://<machine3-ip>:9090
 
 ---
 
-## 🌐 Step 3: Set Up Grafana Cloud
+## Step 3: Set Up Grafana Cloud
 
 1. Sign up at [Grafana Cloud](https://grafana.com)
 2. Create a **Grafana Cloud Stack**
@@ -155,16 +157,16 @@ http://<machine3-ip>:9090
 
 ---
 
-## 🔧 Step 4: Connect Prometheus to Grafana Cloud
+## Step 4: Connect Prometheus to Grafana Cloud
 
 Update `/etc/prometheus/prometheus.yml` to include the following `remote_write` block:
 
 ```yaml
 remote_write:
-  - url: https://<your-grafana-remote-write-url>
+  - url: https://<our-grafana-remote-write-url>
     basic_auth:
-      username: <your-grafana-username>
-      password: <your-api-key>
+      username: <our-grafana-username>
+      password: <our-api-key>
 ```
 
 Restart Prometheus:
@@ -174,9 +176,9 @@ sudo systemctl restart prometheus
 
 ---
 
-## 📊 Step 5: Monitor Metrics in Grafana
+## Step 5: Monitor Metrics in Grafana
 
-1. Log in to your Grafana Cloud dashboard
+1. Log in to our Grafana Cloud dashboard
 2. Go to **Explore** and query:
    ```
    node_cpu_seconds_total{instance="machine1"}
@@ -188,7 +190,7 @@ sudo systemctl restart prometheus
 
 ---
 
-## ✅ Security Group Recommendations
+## Security Group Recommendations
 
 | Port | Description          | Apply To           |
 |------|----------------------|--------------------|
@@ -198,14 +200,9 @@ sudo systemctl restart prometheus
 
 ---
 
-## 🧠 Notes
+## Notes
 
 - Make sure all EC2 machines are in the same **VPC** or can reach each other.
 - Open necessary ports in **Security Groups**.
-- You can add more machines by updating Prometheus config with new `job_name` blocks.
+- we can add more machines by updating Prometheus config with new `job_name` blocks.
 
----
-
-## 📂 Optional: Automate with Ansible or Terraform
-
-Ask for a playbook or script to automate this setup if needed!
